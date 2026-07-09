@@ -28,6 +28,8 @@ async function main() {
     where: { email: 'user@canteevo.com' },
     update: {},
     create: {
+      nis: '31312313123',
+      username: 'test_user',
       email: 'user@canteevo.com',
       password: userPassword,
       name: 'Test User',
