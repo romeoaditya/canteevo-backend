@@ -15,8 +15,10 @@ export interface AuthTokenResponse {
   accessToken: string;
   user: {
     id: string;
-    email: string;
+    nis: string;
+    username: string;
     name: string;
+    email: string;
   };
 }
 
@@ -32,23 +34,38 @@ export class AuthService {
   async register(dto: RegisterDto): Promise<ApiResponse<AuthTokenResponse>> {
     this.logger.log(`Registering user: ${dto.email}`);
 
-    const existingUser = await this.prisma.user.findUnique({
+    const existingEmail = await this.prisma.user.findUnique({
       where: { email: dto.email },
     });
+    if (existingEmail) {
+      throw new ConflictException('Email already exists');
+    }
 
-    if (existingUser) {
-      throw new ConflictException('User with this email already exists');
+    const existingNis = await this.prisma.user.findUnique({
+      where: { nis: dto.nis },
+    });
+    if (existingNis) {
+      throw new ConflictException('NIS already exists');
+    }
+
+    const existingUsername = await this.prisma.user.findUnique({
+      where: { username: dto.username },
+    });
+    if (existingUsername) {
+      throw new ConflictException('Username already exists');
     }
 
     const hashedPassword = await bcrypt.hash(dto.password, 10);
 
     const user = await this.prisma.user.create({
       data: {
+        nis: dto.nis,
+        username: dto.username,
+        name: dto.name,
         email: dto.email,
         password: hashedPassword,
-        name: dto.name,
       },
-      select: { id: true, email: true, name: true },
+      select: { id: true, nis: true, username: true, name: true, email: true },
     });
 
     const token = this.generateToken(user);
@@ -71,15 +88,16 @@ export class AuthService {
     }
 
     const isPasswordValid = await bcrypt.compare(dto.password, user.password);
-
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid email or password');
     }
 
     const userResponse = {
       id: user.id,
-      email: user.email,
+      nis: user.nis,
+      username: user.username,
       name: user.name,
+      email: user.email,
     };
 
     const token = this.generateToken(userResponse);
@@ -95,7 +113,15 @@ export class AuthService {
 
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      select: { id: true, email: true, name: true, createdAt: true },
+      select: {
+        id: true,
+        nis: true,
+        username: true,
+        name: true,
+        email: true,
+        coinBalance: true,
+        createdAt: true,
+      },
     });
 
     if (!user) {

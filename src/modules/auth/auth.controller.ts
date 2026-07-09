@@ -20,11 +20,17 @@ export class AuthController {
     description: 'User registration data',
     schema: {
       type: 'object',
-      required: ['email', 'password', 'name'],
+      required: ['nis', 'name', 'username', 'email', 'password'],
       properties: {
-        email: { type: 'string', format: 'email', example: 'user@example.com' },
+        nis: { type: 'string', example: '31312313123' },
+        name: { type: 'string', example: 'Romeo Aditya Pratama' },
+        username: { type: 'string', example: 'romeoadity_' },
+        email: {
+          type: 'string',
+          format: 'email',
+          example: 'romeo@example.com',
+        },
         password: { type: 'string', minLength: 8, example: 'SecurePass123' },
-        name: { type: 'string', example: 'John Doe' },
       },
     },
   })

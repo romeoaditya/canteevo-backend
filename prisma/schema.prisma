@@ -19,6 +19,8 @@ enum PaymentMethodType {
 
 model User {
   id          String   @id @default(uuid())
+  nis         String   @unique
+  username    String   @unique
   name        String
   email       String   @unique
   password    String
