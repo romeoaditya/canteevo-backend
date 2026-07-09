@@ -1,0 +1,196 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum OrderStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+enum PaymentMethodType {
+  QRIS
+  CASH
+}
+
+model User {
+  id          String   @id @default(uuid())
+  name        String
+  email       String   @unique
+  password    String
+  phone       String?
+  coinBalance Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  cartItems CartItem[]
+  orders    Order[]
+  reviews   Review[]
+
+  @@map("users")
+}
+
+model Admin {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("admins")
+}
+
+model Merchant {
+  id        String   @id @default(uuid())
+  name      String
+  location  String?
+  imageUrl  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  menuItems MenuItem[]
+  orders    Order[]
+
+  @@map("merchants")
+}
+
+model Category {
+  id   String @id @default(uuid())
+  name String @unique
+
+  menuItems MenuItem[]
+
+  @@map("categories")
+}
+
+model MenuItem {
+  id            String   @id @default(uuid())
+  name          String
+  description   String?
+  price         Int
+  imageUrl      String?
+  isRecommended Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  merchant   Merchant @relation(fields: [merchantId], references: [id])
+  merchantId String
+
+  category   Category? @relation(fields: [categoryId], references: [id])
+  categoryId String?
+
+  nutrition  Nutrition?
+  reviews    Review[]
+  cartItems  CartItem[]
+  orderItems OrderItem[]
+
+  @@map("menu_items")
+}
+
+model Nutrition {
+  id       String @id @default(uuid())
+  calories Int
+  protein  Float
+  carbs    Float
+  fat      Float
+
+  menuItem   MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+  menuItemId String   @unique
+
+  @@map("nutritions")
+}
+
+model Review {
+  id        String   @id @default(uuid())
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+
+  menuItem   MenuItem @relation(fields: [menuItemId], references: [id])
+  menuItemId String
+
+  @@map("reviews")
+}
+
+model CartItem {
+  id         String   @id @default(uuid())
+  quantity   Int      @default(1)
+  variant    String?
+  note       String?
+  isSelected Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+
+  menuItem   MenuItem @relation(fields: [menuItemId], references: [id])
+  menuItemId String
+
+  @@map("cart_items")
+}
+
+model PromoCode {
+  id             String    @id @default(uuid())
+  code           String    @unique
+  discountAmount Int
+  isActive       Boolean   @default(true)
+  expiresAt      DateTime?
+  createdAt      DateTime  @default(now())
+
+  orders Order[]
+
+  @@map("promo_codes")
+}
+
+model Order {
+  id            String            @id @default(uuid())
+  status        OrderStatus       @default(PENDING)
+  paymentMethod PaymentMethodType
+
+  subtotal      Int
+  serviceFee    Int @default(500)
+  coinDiscount  Int @default(0)
+  promoDiscount Int @default(0)
+  total         Int
+
+  createdAt DateTime  @default(now())
+  paidAt    DateTime?
+
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+
+  merchant   Merchant @relation(fields: [merchantId], references: [id])
+  merchantId String
+
+  promoCode   PromoCode? @relation(fields: [promoCodeId], references: [id])
+  promoCodeId String?
+
+  items OrderItem[]
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id           String  @id @default(uuid())
+  quantity     Int
+  priceAtOrder Int
+  variant      String?
+  note         String?
+
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId String
+
+  menuItem   MenuItem @relation(fields: [menuItemId], references: [id])
+  menuItemId String
+
+  @@map("order_items")
+}
