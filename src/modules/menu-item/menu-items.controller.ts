@@ -7,21 +7,28 @@ import {
   Patch,
   Post,
   Query,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
-import { MenuItemsService } from './menu-items.service';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { MenuItemsService } from './menu-items.service.js';
 import {
   CreateMenuItemDto,
   FindMenuItemsQueryDto,
   UpdateMenuItemDto,
-} from './dto/menu-items.dto';
+} from './dto/menu-items.dto.js';
 
 @Controller('menu-items')
 export class MenuItemsController {
   constructor(private readonly menuItemsService: MenuItemsService) {}
 
   @Post()
-  create(@Body() createMenuItemDto: CreateMenuItemDto) {
-    return this.menuItemsService.create(createMenuItemDto);
+  @UseInterceptors(FileInterceptor('image'))
+  create(
+    @Body() createMenuItemDto: CreateMenuItemDto,
+    @UploadedFile() file?: Express.Multer.File,
+  ) {
+    return this.menuItemsService.create(createMenuItemDto, file);
   }
 
   @Get()
@@ -35,11 +42,13 @@ export class MenuItemsController {
   }
 
   @Patch(':id')
+  @UseInterceptors(FileInterceptor('image'))
   update(
     @Param('id') id: string,
     @Body() updateMenuItemDto: UpdateMenuItemDto,
+    @UploadedFile() file?: Express.Multer.File,
   ) {
-    return this.menuItemsService.update(id, updateMenuItemDto);
+    return this.menuItemsService.update(id, updateMenuItemDto, file);
   }
 
   @Delete(':id')

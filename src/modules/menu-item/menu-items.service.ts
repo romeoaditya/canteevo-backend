@@ -1,14 +1,18 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service.js';
 import {
   CreateMenuItemDto,
   FindMenuItemsQueryDto,
   UpdateMenuItemDto,
-} from './dto/menu-items.dto';
+} from './dto/menu-items.dto.js';
+import { CloudinaryService } from '../cloudinary/cloudinary.service.js';
 
 @Injectable()
 export class MenuItemsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly cloudinaryService: CloudinaryService,
+  ) {}
 
   private async validateRelations(merchantId?: string, categoryId?: string) {
     if (merchantId) {
@@ -34,15 +38,28 @@ export class MenuItemsService {
     }
   }
 
-  async create(createMenuItemDto: CreateMenuItemDto) {
+  async create(
+    createMenuItemDto: CreateMenuItemDto,
+    file?: Express.Multer.File,
+  ) {
     const { nutrition, merchantId, categoryId, ...menuData } =
       createMenuItemDto;
 
     await this.validateRelations(merchantId, categoryId);
 
+    // Upload image ke Cloudinary kalau ada
+    let imageUrl: string | undefined;
+    if (file) {
+      imageUrl = await this.cloudinaryService.uploadImage(
+        file,
+        'canteevo/menu-items',
+      );
+    }
+
     return this.prisma.menuItem.create({
       data: {
         ...menuData,
+        imageUrl,
         merchant: { connect: { id: merchantId } },
         ...(categoryId && { category: { connect: { id: categoryId } } }),
         ...(nutrition && { nutrition: { create: nutrition } }),
@@ -95,17 +112,31 @@ export class MenuItemsService {
     return { ...menuItem, averageRating };
   }
 
-  async update(id: string, updateMenuItemDto: UpdateMenuItemDto) {
+  async update(
+    id: string,
+    updateMenuItemDto: UpdateMenuItemDto,
+    file?: Express.Multer.File,
+  ) {
     const { nutrition, merchantId, categoryId, ...menuData } =
       updateMenuItemDto;
 
     await this.findOne(id);
     await this.validateRelations(merchantId, categoryId);
 
+    // Upload image baru ke Cloudinary kalau ada
+    let imageUrl: string | undefined;
+    if (file) {
+      imageUrl = await this.cloudinaryService.uploadImage(
+        file,
+        'canteevo/menu-items',
+      );
+    }
+
     return this.prisma.menuItem.update({
       where: { id },
       data: {
         ...menuData,
+        ...(imageUrl && { imageUrl }),
         ...(merchantId && { merchant: { connect: { id: merchantId } } }),
         ...(categoryId && { category: { connect: { id: categoryId } } }),
         ...(nutrition && {
@@ -123,9 +154,6 @@ export class MenuItemsService {
 
   async remove(id: string) {
     await this.findOne(id);
-
-    return this.prisma.menuItem.delete({
-      where: { id },
-    });
+    return this.prisma.menuItem.delete({ where: { id } });
   }
 }
