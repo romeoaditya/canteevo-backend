@@ -14,6 +14,23 @@ export class MenuItemsService {
     private readonly cloudinaryService: CloudinaryService,
   ) {}
 
+  private sanitize(dto: CreateMenuItemDto | UpdateMenuItemDto) {
+    return {
+      ...dto,
+      ...(dto.price !== undefined && { price: Number(dto.price) }),
+      ...(dto.isRecommended !== undefined && {
+        isRecommended:
+          dto.isRecommended === true || (dto.isRecommended as any) === 'true',
+      }),
+      ...(dto.nutrition !== undefined && {
+        nutrition:
+          typeof dto.nutrition === 'string'
+            ? JSON.parse(dto.nutrition)
+            : dto.nutrition,
+      }),
+    };
+  }
+
   private async validateRelations(merchantId?: string, categoryId?: string) {
     if (merchantId) {
       const merchant = await this.prisma.merchant.findUnique({
@@ -42,12 +59,11 @@ export class MenuItemsService {
     createMenuItemDto: CreateMenuItemDto,
     file?: Express.Multer.File,
   ) {
-    const { nutrition, merchantId, categoryId, ...menuData } =
-      createMenuItemDto;
+    const sanitized = this.sanitize(createMenuItemDto) as CreateMenuItemDto;
+    const { nutrition, merchantId, categoryId, ...menuData } = sanitized;
 
     await this.validateRelations(merchantId, categoryId);
 
-    // Upload image ke Cloudinary kalau ada
     let imageUrl: string | undefined;
     if (file) {
       imageUrl = await this.cloudinaryService.uploadImage(
@@ -117,13 +133,12 @@ export class MenuItemsService {
     updateMenuItemDto: UpdateMenuItemDto,
     file?: Express.Multer.File,
   ) {
-    const { nutrition, merchantId, categoryId, ...menuData } =
-      updateMenuItemDto;
+    const sanitized = this.sanitize(updateMenuItemDto) as UpdateMenuItemDto;
+    const { nutrition, merchantId, categoryId, ...menuData } = sanitized;
 
     await this.findOne(id);
     await this.validateRelations(merchantId, categoryId);
 
-    // Upload image baru ke Cloudinary kalau ada
     let imageUrl: string | undefined;
     if (file) {
       imageUrl = await this.cloudinaryService.uploadImage(

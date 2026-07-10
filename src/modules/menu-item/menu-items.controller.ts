@@ -39,7 +39,15 @@ export class MenuItemsController {
         isRecommended: { type: 'boolean' },
         merchantId: { type: 'string' },
         categoryId: { type: 'string' },
-        nutrition: { type: 'object' },
+        nutrition: {
+          type: 'object',
+          properties: {
+            calories: { type: 'integer' },
+            protein: { type: 'number' },
+            carbs: { type: 'number' },
+            fat: { type: 'number' },
+          },
+        },
       },
     },
   })
@@ -77,7 +85,15 @@ export class MenuItemsController {
         isRecommended: { type: 'boolean' },
         merchantId: { type: 'string' },
         categoryId: { type: 'string' },
-        nutrition: { type: 'object' },
+        nutrition: {
+          type: 'object',
+          properties: {
+            calories: { type: 'integer' },
+            protein: { type: 'number' },
+            carbs: { type: 'number' },
+            fat: { type: 'number' },
+          },
+        },
       },
     },
   })
