@@ -17,6 +17,7 @@ import {
   FindMenuItemsQueryDto,
   UpdateMenuItemDto,
 } from './dto/menu-items.dto.js';
+import { ApiBody, ApiConsumes } from '@nestjs/swagger';
 
 @Controller('menu-items')
 export class MenuItemsController {
@@ -24,6 +25,21 @@ export class MenuItemsController {
 
   @Post()
   @UseInterceptors(FileInterceptor('image'))
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        image: { type: 'string', format: 'binary' },
+        name: { type: 'string' },
+        description: { type: 'string' },
+        price: { type: 'number' },
+        isRecommended: { type: 'boolean' },
+        merchantId: { type: 'string' },
+        categoryId: { type: 'string' },
+      },
+    },
+  })
   create(
     @Body() createMenuItemDto: CreateMenuItemDto,
     @UploadedFile() file?: Express.Multer.File,

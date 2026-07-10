@@ -44,14 +44,12 @@ export class CreateMenuItemDto {
 
   @IsInt()
   @IsPositive()
+  @Type(() => Number)
   price: number;
-
-  @IsUrl()
-  @IsOptional()
-  imageUrl?: string;
 
   @IsBoolean()
   @IsOptional()
+  @Type(() => Boolean)
   isRecommended?: boolean;
 
   @IsUUID()
