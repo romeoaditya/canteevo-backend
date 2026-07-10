@@ -59,7 +59,7 @@ export class MerchantsController {
   @Patch(':id')
   @UseInterceptors(FileInterceptor('image'))
   @ApiConsumes('multipart/form-data')
-  @ApiOperation({ summary: 'Update merchant with image upload' })
+  @ApiOperation({ summary: 'Update merchant' })
   @ApiBody({
     schema: {
       type: 'object',

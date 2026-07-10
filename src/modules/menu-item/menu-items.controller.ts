@@ -65,7 +65,7 @@ export class MenuItemsController {
   @Patch(':id')
   @UseInterceptors(FileInterceptor('image'))
   @ApiConsumes('multipart/form-data')
-  @ApiOperation({ summary: 'Update menu item with image upload' })
+  @ApiOperation({ summary: 'Update menu item' })
   @ApiBody({
     schema: {
       type: 'object',

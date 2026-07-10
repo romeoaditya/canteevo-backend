@@ -24,7 +24,8 @@ export class MerchantsService {
 
     return this.prisma.merchant.create({
       data: {
-        ...createMerchantDto,
+        name: createMerchantDto.name,
+        location: createMerchantDto.location,
         imageUrl,
       },
     });
